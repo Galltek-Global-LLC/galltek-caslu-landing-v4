@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trinity — Comece a lucrar agora mesmo</title>
+    <meta name="description" content="Entre no grupo gratuito e tenha acesso aos três melhores traders de opções binárias." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://caslutrader.com/" />
+    <meta property="og:title" content="Trinity — Comece a lucrar agora mesmo" />
+    <meta property="og:description" content="Entre no grupo gratuito e tenha acesso aos três melhores traders de opções binárias." />
+    <meta property="og:image" content="https://caslutrader.com/trinity-hero.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Trinity — Comece a lucrar agora mesmo" />
+    <meta name="twitter:description" content="Entre no grupo gratuito e tenha acesso aos três melhores traders de opções binárias." />
+    <meta name="twitter:image" content="https://caslutrader.com/trinity-hero.png" />
+
+    <!-- Meta Pixel -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1336546998650554');
+      // PageView é disparado manualmente no React com eventID
+      // (necessário para deduplicação Pixel + CAPI). Ver src/App.tsx.
+    </script>
+    <!-- End Meta Pixel -->
+  </head>
+  <body>
+    <noscript>
+      <img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=1336546998650554&ev=PageView&noscript=1"/>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Sparkle Tracker Script v2.5 (Operações + FBP + Anti-Cache) -->
+    <script>
+      (function() {
+        function getCookie(name) {
+          var value = "; " + document.cookie;
+          var parts = value.split("; " + name + "=");
+          if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        function preserveParams() {
+          const currentUrlParams = new URLSearchParams(window.location.search);
+          const fbpCookie = getCookie('_fbp');
+          const fbcCookie = getCookie('_fbc');
+
+          if (fbpCookie && !currentUrlParams.has('fbp')) currentUrlParams.set('fbp', fbpCookie);
+          if (fbcCookie && !currentUrlParams.has('fbc')) currentUrlParams.set('fbc', fbcCookie);
+
+          document.querySelectorAll('a').forEach(function(link) {
+            const href = link.href;
+            var isSparkle =
+              link.classList.contains('sparkle-track') ||
+              href.indexOf('/re?') !== -1 ||
+              href.indexOf('/r?') !== -1 ||
+              href.indexOf('/#/re?') !== -1 ||
+              href.indexOf('/re/op/') !== -1;
+            if (!isSparkle) return;
+            try {
+              var url = new URL(href);
+              currentUrlParams.forEach(function(val, key) {
+                if (!url.searchParams.has(key)) url.searchParams.set(key, val);
+              });
+              link.href = url.toString();
+            } catch (e) { console.error('Erro Sparkle Script:', e); }
+          });
+        }
+
+        window.addEventListener('DOMContentLoaded', preserveParams);
+        setTimeout(preserveParams, 500);
+        setTimeout(preserveParams, 2000);
+      })();
+    </script>
+  </body>
+</html>
