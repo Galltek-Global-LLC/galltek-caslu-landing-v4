@@ -6,18 +6,22 @@ interface Env {
   META_PIXEL_ID?: string;
   META_ACCESS_TOKEN?: string;
   CRM_WEBHOOK_URL?: string;
+  SPARKLE_CRM_WEBHOOK_URL?: string;
 }
 
 const FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbyxQUW8uO_zLxphyCAwK7m4ew4aExanEKYU1ytqk5Ekah5i845b5KMRb6gEgKW9byXK/exec';
 const DEFAULT_PIXEL_ID = '1336546998650554';
 const DEFAULT_CRM_WEBHOOK_URL =
   'https://api.datacrazy.io/v1/crm/api/crm/flows/webhooks/55f11fcd-d596-4b32-bfdb-689e74a6bd73/11660c92-59ad-4f48-be40-7c265d4031d5';
+const DEFAULT_SPARKLE_CRM_WEBHOOK_URL =
+  'https://api.sparklechrm.com/api/webhooks/3d95f299-f731-4f0d-8f43-46a27cc49089/caslu-lead-se-cadastrou-na-landing-page?token=-hsC6h00ezB8uhPBXo2J9Q8mrHck81cm6phdG1U7XvM';
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const targetUrl = env.APPS_SCRIPT_URL || FALLBACK_URL;
   const pixelId = env.META_PIXEL_ID || DEFAULT_PIXEL_ID;
   const accessToken = env.META_ACCESS_TOKEN;
-  const crmWebhookUrl = env.CRM_WEBHOOK_URL || DEFAULT_CRM_WEBHOOK_URL;
+  const dataCrazyWebhookUrl = env.CRM_WEBHOOK_URL || DEFAULT_CRM_WEBHOOK_URL;
+  const sparkleCrmWebhookUrl = env.SPARKLE_CRM_WEBHOOK_URL || DEFAULT_SPARKLE_CRM_WEBHOOK_URL;
 
   let payload: Record<string, unknown>;
   try {
@@ -92,45 +96,60 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
   }
 
-  // 3. Envia para o CRM via webhook (fire-and-forget — não bloqueia o submit)
-  let crmResult: { sent: boolean; status?: number; error?: string } | undefined;
-  if (crmWebhookUrl) {
-    const crmPayload = {
-      nome: rest.nome,
-      email: rest.email,
-      telefone: whatsapp,
-      source: rest.source,
-      campaign: rest.campaign,
-      utm_source: rest.utm_source,
-      utm_medium: rest.utm_medium,
-      utm_campaign: rest.utm_campaign,
-      utm_content: rest.utm_content,
-      utm_term: rest.utm_term,
-      fbc,
-      fbp,
-      source_url,
-      timestamp: new Date().toISOString(),
-    };
+  // 3. Envia para os CRMs via webhook (fire-and-forget — não bloqueia o submit).
+  // Dispara DataCrazy e Sparkle CRM em paralelo. Depois que a migração para
+  // o Sparkle CRM estiver estável, remover o webhook do DataCrazy.
+  const crmPayload = {
+    nome: rest.nome,
+    email: rest.email,
+    telefone: whatsapp,
+    source: rest.source,
+    campaign: rest.campaign,
+    utm_source: rest.utm_source,
+    utm_medium: rest.utm_medium,
+    utm_campaign: rest.utm_campaign,
+    utm_content: rest.utm_content,
+    utm_term: rest.utm_term,
+    fbc,
+    fbp,
+    source_url,
+    timestamp: new Date().toISOString(),
+  };
+
+  const postToWebhook = async (
+    label: string,
+    url: string | undefined,
+  ): Promise<{ sent: boolean; status?: number; error?: string }> => {
+    if (!url) return { sent: false, error: 'url-not-configured' };
     try {
-      const crmResponse = await fetch(crmWebhookUrl, {
+      const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(crmPayload),
       });
-      crmResult = { sent: crmResponse.ok, status: crmResponse.status };
-      if (!crmResponse.ok) {
-        console.warn('[CRM] Webhook retornou status', crmResponse.status);
+      if (!resp.ok) {
+        console.warn(`[${label}] Webhook retornou status`, resp.status);
       }
+      return { sent: resp.ok, status: resp.status };
     } catch (err) {
-      crmResult = { sent: false, error: (err as Error).message };
-      console.warn('[CRM] Falha ao enviar para webhook:', crmResult.error);
+      const error = (err as Error).message;
+      console.warn(`[${label}] Falha ao enviar para webhook:`, error);
+      return { sent: false, error };
     }
-  }
+  };
+
+  const [dataCrazyResult, sparkleCrmResult] = await Promise.all([
+    postToWebhook('DataCrazy', dataCrazyWebhookUrl),
+    postToWebhook('SparkleCRM', sparkleCrmWebhookUrl),
+  ]);
 
   return Response.json({
     success: true,
     capi: capiResult ? { sent: capiResult.success } : { sent: false, reason: 'token-not-configured' },
-    crm: crmResult ? { sent: crmResult.sent, status: crmResult.status } : undefined,
+    crm: {
+      datacrazy: { sent: dataCrazyResult.sent, status: dataCrazyResult.status },
+      sparkle: { sent: sparkleCrmResult.sent, status: sparkleCrmResult.status },
+    },
   }, { status: 200 });
 };
 
