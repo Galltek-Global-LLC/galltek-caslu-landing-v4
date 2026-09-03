@@ -22,3 +22,6 @@ dist-ssr
 *.sw?
 .env
 _design-original/
+
+.wrangler/
+
