@@ -1,4 +1,4 @@
-import { sendLeadToMetaCapi } from './_lib/meta-capi';
+// import { sendLeadToMetaCapi } from './_lib/meta-capi'; // Desativado — Sparkle Tracker repassa pro Meta
 import { normalizeName, normalizeEmail } from './_lib/normalizers';
 
 interface Env {
@@ -105,33 +105,38 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     );
   }
 
-  // 2. Envia para Meta Conversions API (se token configurado)
-  // Acontece em paralelo, mas não bloqueia o sucesso do submit caso falhe.
-  let capiResult: { success: boolean; error?: string } | undefined;
-  if (accessToken && eventID) {
-    capiResult = await sendLeadToMetaCapi(pixelId, accessToken, {
-      eventName: event_name ? String(event_name) : 'Lead',
-      eventId: String(eventID),
-      eventSourceUrl: source_url ? String(source_url) : undefined,
-      userData: {
-        email: rest.email ? String(rest.email) : undefined,
-        phone: whatsapp ? String(whatsapp) : undefined,
-        fbc: fbc ? String(fbc) : undefined,
-        fbp: fbp ? String(fbp) : undefined,
-        clientIp: request.headers.get('cf-connecting-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
-      },
-      customData: {
-        content_name: rest.campaign,
-        content_category: rest.source,
-      },
-      testEventCode: test_event_code ? String(test_event_code) : undefined,
-    });
-
-    if (!capiResult.success) {
-      console.warn('[CAPI] Falha ao enviar evento Lead:', capiResult.error);
-    }
-  }
+  // 2. Meta Conversions API — DESATIVADO nesta Function.
+  // Motivo: o Sparkle Tracker (webhook em /webhook/in/whk_...) agora é o
+  // responsável por repassar o evento pra Meta CAPI, evitando duplicação
+  // de disparo server-side. O Pixel client-side (index.html) segue disparando
+  // normalmente pelo browser.
+  //
+  // Se o Sparkle deixar de repassar (pixel_sent: false no response e
+  // sem CAPI configurada no painel deles), reativar o bloco comentado abaixo.
+  const capiResult: { success: boolean; error?: string } | undefined = undefined;
+  // if (accessToken && eventID) {
+  //   capiResult = await sendLeadToMetaCapi(pixelId, accessToken, {
+  //     eventName: event_name ? String(event_name) : 'Lead',
+  //     eventId: String(eventID),
+  //     eventSourceUrl: source_url ? String(source_url) : undefined,
+  //     userData: {
+  //       email: rest.email ? String(rest.email) : undefined,
+  //       phone: whatsapp ? String(whatsapp) : undefined,
+  //       fbc: fbc ? String(fbc) : undefined,
+  //       fbp: fbp ? String(fbp) : undefined,
+  //       clientIp: request.headers.get('cf-connecting-ip') || undefined,
+  //       userAgent: request.headers.get('user-agent') || undefined,
+  //     },
+  //     customData: {
+  //       content_name: rest.campaign,
+  //       content_category: rest.source,
+  //     },
+  //     testEventCode: test_event_code ? String(test_event_code) : undefined,
+  //   });
+  //   if (!capiResult.success) {
+  //     console.warn('[CAPI] Falha ao enviar evento Lead:', capiResult.error);
+  //   }
+  // }
 
   // 3. Envia para os CRMs / rastreadores via webhook (fire-and-forget —
   // não bloqueia o submit). Cada um tem seu próprio payload:
