@@ -24,11 +24,9 @@ const DEFAULT_SPARKLE_TRACKER_WEBHOOK_URL =
 // de redirect (`re/op/6d045aeb-b631-49b6-a48f-2c987ff0e677`).
 const DEFAULT_SPARKLE_OP_ID = 'op_4b360bc3ef';
 
-// Valores fixos do evento Lead pro Sparkle Tracker. `value=1` porque alguns
-// setups exigem > 0; se quiser LTV real, sobrescrever no futuro.
+// Nome do evento pro Sparkle Tracker. `value`/`currency` foram removidos
+// a pedido do Sparkle — não devem ser enviados neste funil.
 const LEAD_EVENT_NAME = 'Lead';
-const LEAD_VALUE = 1;
-const LEAD_CURRENCY = 'BRL';
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const targetUrl = env.APPS_SCRIPT_URL || FALLBACK_URL;
@@ -169,8 +167,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const sparkleTrackerPayload: Record<string, unknown> = {
     event_name: LEAD_EVENT_NAME,
     event_id: eventID,
-    value: LEAD_VALUE,
-    currency: LEAD_CURRENCY,
     op_id: sparkleOpId,
     name: rest.nome,
     email: rest.email,
