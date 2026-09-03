@@ -1,4 +1,4 @@
-import { UTMParams } from './utm-tracker';
+import { TrackingParams } from './utm-tracker';
 import { getTestEventCode, resolveFbc } from './meta-tracking';
 
 const SUBMIT_ENDPOINT = '/api/submit-form';
@@ -23,6 +23,12 @@ type SubmitPayload = {
   utm_campaign: string;
   utm_content: string;
   utm_term: string;
+  // Click IDs — capturados junto das UTMs pra atribuição em Meta/Google/TikTok.
+  fbclid?: string;
+  gclid?: string;
+  wbraid?: string;
+  gbraid?: string;
+  ttclid?: string;
 };
 
 // Lê cookie do navegador pelo nome. Usado para capturar _fbc e _fbp do Meta Pixel.
@@ -32,17 +38,22 @@ const readCookie = (name: string): string | undefined => {
   return match ? decodeURIComponent(match[1]) : undefined;
 };
 
-const buildPayload = (formData: FormSubmissionData, utms: UTMParams): SubmitPayload => ({
+const buildPayload = (formData: FormSubmissionData, tracking: TrackingParams): SubmitPayload => ({
   nome: formData.name,
   email: formData.email,
   whatsapp: formData.phone,
   source: formData.source,
   campaign: CAMPAIGN_ID,
-  utm_source: utms.utm_source || '',
-  utm_medium: utms.utm_medium || '',
-  utm_campaign: utms.utm_campaign || '',
-  utm_content: utms.utm_content || '',
-  utm_term: utms.utm_term || '',
+  utm_source: tracking.utm_source || '',
+  utm_medium: tracking.utm_medium || '',
+  utm_campaign: tracking.utm_campaign || '',
+  utm_content: tracking.utm_content || '',
+  utm_term: tracking.utm_term || '',
+  fbclid: tracking.fbclid,
+  gclid: tracking.gclid,
+  wbraid: tracking.wbraid,
+  gbraid: tracking.gbraid,
+  ttclid: tracking.ttclid,
 });
 
 // Payload enviado para a Function (inclui dados extras pro Meta CAPI).
@@ -101,10 +112,10 @@ const tryFallback = async (payload: SubmitPayload): Promise<boolean> => {
 
 export const submitToGoogleAppsScript = async (
   formData: FormSubmissionData,
-  utms: UTMParams = {},
+  tracking: TrackingParams = {},
   eventID?: string,
 ): Promise<boolean> => {
-  const basePayload = buildPayload(formData, utms);
+  const basePayload = buildPayload(formData, tracking);
   const functionPayload: FunctionPayload = {
     ...basePayload,
     eventID,
