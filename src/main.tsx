@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App.tsx';
 import GrupoRoute from './routes/GrupoRoute';
+import { RESOLVE_GRUPO_ENDPOINT, RESOLVE_TIMEOUT_MS, type ResolveGrupoResponse } from './lib/redirect-urls';
 import './index.css';
 
 // TEMPORÁRIO: WA_URL (+55 21 97353-3963 substituindo +55 11 96350-8768) está
@@ -11,6 +12,21 @@ import './index.css';
 // O link do Sparkle e o fallback do grupo ficam encapsulados em GrupoRoute +
 // functions/api/resolve-grupo-redirect.ts.
 const WA_URL = 'https://wa.me/5521973533963?text=CASLU%2C%20QUERO%20ENTRAR';
+
+// Pré-carrega o health-check do Sparkle antes do React inicializar. O
+// GrupoRoute consome essa Promise em vez de disparar seu próprio fetch,
+// ganhando os ~1–2s entre carregamento inicial e primeiro render. Se cair
+// numa rota que não precisa (ex.: /wa), a Promise é ignorada.
+if (typeof window !== 'undefined') {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), RESOLVE_TIMEOUT_MS);
+  window.__grupoRedirectPromise = fetch(RESOLVE_GRUPO_ENDPOINT, {
+    signal: controller.signal,
+  })
+    .then((r) => r.json() as Promise<ResolveGrupoResponse>)
+    .catch(() => null)
+    .finally(() => clearTimeout(timeoutId));
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

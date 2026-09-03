@@ -1,42 +1,58 @@
 import { useEffect, useState } from 'react';
 import App from '../App';
+import {
+  SPARKLE_URL,
+  FALLBACK_GRUPO_URL,
+  RESOLVE_GRUPO_ENDPOINT,
+  RESOLVE_TIMEOUT_MS,
+  type ResolveGrupoResponse,
+} from '../lib/redirect-urls';
 
-// URL direta do grupo (fallback safe se o Sparkle estiver mal configurado).
-// Mantida no client como default para o caso da Function `/api/resolve-grupo-redirect`
-// nao responder a tempo ou retornar erro — assim o usuario cai direto no grupo
-// em vez de acabar na homepage do WhatsApp.
-// Params `src` e `via` marcam o link como fallback — permite identificar,
-// via analytics do CRM/Meta, quando o Sparkle esteve fora do ar.
-const FALLBACK_GRUPO_URL =
-  'https://chat.whatsapp.com/CMWupazVQxs35Zya9ijYPw?src=fallback-grupo&via=caslu-v3';
+// Promise pré-carregada em main.tsx antes do React inicializar (ganha ~1-2s
+// no fluxo). Se não existir (SSR/render isolado), o useEffect faz o fetch
+// próprio como fallback.
+declare global {
+  interface Window {
+    __grupoRedirectPromise?: Promise<ResolveGrupoResponse | null>;
+  }
+}
 
-const RESOLVE_ENDPOINT = '/api/resolve-grupo-redirect';
-const RESOLVE_TIMEOUT_MS = 2500;
+const requestHealthCheck = (): Promise<ResolveGrupoResponse | null> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RESOLVE_TIMEOUT_MS);
+  return fetch(RESOLVE_GRUPO_ENDPOINT, { signal: controller.signal })
+    .then((r) => r.json() as Promise<ResolveGrupoResponse>)
+    .catch(() => null)
+    .finally(() => clearTimeout(timeout));
+};
 
 export default function GrupoRoute() {
-  // Inicia com fallback direto — se a Function não responder, essa é a URL
-  // usada no submit e no botão do modal. So faz upgrade pro Sparkle se o
-  // health check confirmar que o destino final aponta pra chat.whatsapp.com.
-  const [redirectUrl, setRedirectUrl] = useState<string>(FALLBACK_GRUPO_URL);
+  // Default OTIMISTA: assume que o Sparkle está saudável (99% do tempo é).
+  // Só troca pra FALLBACK_GRUPO_URL se a Function responder healthy=false
+  // EXPLICITAMENTE. Se der timeout/erro, mantém Sparkle (fail-open).
+  const [redirectUrl, setRedirectUrl] = useState<string>(SPARKLE_URL);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), RESOLVE_TIMEOUT_MS);
+    let cancelled = false;
 
-    fetch(RESOLVE_ENDPOINT, { signal: controller.signal })
-      .then((r) => r.json())
-      .then((data: { url?: string; healthy?: boolean; source?: string }) => {
-        if (data?.url && data?.healthy) {
-          setRedirectUrl(data.url);
-        }
-        // Se healthy=false, mantem FALLBACK_GRUPO_URL (default do state).
-      })
-      .catch(() => {
-        // Timeout ou erro de rede — mantem FALLBACK_GRUPO_URL.
-      })
-      .finally(() => clearTimeout(timeout));
+    const promise =
+      typeof window !== 'undefined' && window.__grupoRedirectPromise
+        ? window.__grupoRedirectPromise
+        : requestHealthCheck();
 
-    return () => clearTimeout(timeout);
+    promise.then((data) => {
+      if (cancelled || !data) return;
+      // Só troca se healthy === false (explicito). Undefined/erro mantém Sparkle.
+      if (data.healthy === false) {
+        setRedirectUrl(FALLBACK_GRUPO_URL);
+      } else if (data.healthy === true && data.url) {
+        setRedirectUrl(data.url);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return <App redirectUrl={redirectUrl} />;
