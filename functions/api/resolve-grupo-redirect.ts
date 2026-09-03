@@ -11,7 +11,7 @@ const DEFAULT_SPARKLE_URL =
 // Params `src` e `via` marcam o link como fallback — permite identificar,
 // via logs ou analytics do CRM/Meta, quando o Sparkle esteve fora do ar.
 const DEFAULT_GRUPO_FALLBACK_URL =
-  'https://chat.whatsapp.com/CMWupazVQxs35Zya9ijYPw?src=fallback-grupo&via=caslu-v4';
+  'https://chat.whatsapp.com/DM8YoTf05muCKuvyqY0UV1?src=fallback-grupo&via=caslu-v4';
 
 // Host esperado no destino final do Sparkle. Se o Sparkle redireciona
 // para algo que NÃO contém isso, consideramos o link quebrado.

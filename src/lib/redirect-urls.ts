@@ -12,7 +12,7 @@ export const SPARKLE_URL =
   'https://ap.sparkletracker.com/re/op/6d045aeb-b631-49b6-a48f-2c987ff0e677?uid=1056';
 
 export const FALLBACK_GRUPO_URL =
-  'https://chat.whatsapp.com/CMWupazVQxs35Zya9ijYPw?src=fallback-grupo&via=caslu-v4';
+  'https://chat.whatsapp.com/DM8YoTf05muCKuvyqY0UV1?src=fallback-grupo&via=caslu-v4';
 
 export const RESOLVE_GRUPO_ENDPOINT = '/api/resolve-grupo-redirect';
 
