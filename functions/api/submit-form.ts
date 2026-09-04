@@ -21,7 +21,7 @@ const DEFAULT_SPARKLE_TRACKER_WEBHOOK_URL =
   'https://ap.sparkletracker.com/webhook/in/whk_1icRsHEjyJtfxY3wLTGHVtOicQaYdhzo_KjO0D_AOzC7lqX_';
 
 // ID da operação Sparkle vinculada a este funil — a mesma referenciada no link
-// de redirect (`re/op/6d045aeb-b631-49b6-a48f-2c987ff0e677`).
+// de redirect (`re/op/op_4b360bc3ef`).
 const DEFAULT_SPARKLE_OP_ID = 'op_4b360bc3ef';
 
 // Nome do evento pro Sparkle Tracker. `value`/`currency` foram removidos

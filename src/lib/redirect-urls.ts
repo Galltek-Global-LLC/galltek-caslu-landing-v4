@@ -9,7 +9,7 @@
 //                     o link como fallback pra rastreio downstream.
 
 export const SPARKLE_URL =
-  'https://ap.sparkletracker.com/re/op/6d045aeb-b631-49b6-a48f-2c987ff0e677?uid=1056';
+  'https://ap.sparkletracker.com/re/op/op_4b360bc3ef?uid=1086';
 
 export const FALLBACK_GRUPO_URL =
   'https://chat.whatsapp.com/DM8YoTf05muCKuvyqY0UV1?src=fallback-grupo&via=caslu-v4';

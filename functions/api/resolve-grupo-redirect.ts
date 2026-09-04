@@ -6,7 +6,7 @@ interface Env {
 
 // URL do Sparkle (atribuição). Configurável via env, com fallback hardcoded.
 const DEFAULT_SPARKLE_URL =
-  'https://ap.sparkletracker.com/re/op/6d045aeb-b631-49b6-a48f-2c987ff0e677?uid=1056';
+  'https://ap.sparkletracker.com/re/op/op_4b360bc3ef?uid=1086';
 
 // Último link conhecido do grupo (safe net absoluta). Só é usado se:
 //   - env override não estiver setado E
